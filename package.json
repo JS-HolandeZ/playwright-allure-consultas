@@ -1,0 +1,25 @@
+{
+  "name": "my_auto",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node play_Runner.js"
+  },
+  "keywords": [],
+  "author": "J. Samuel Holanda",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.2",
+    "lodash": "^4.17.21",
+    "my_auto": "file:",
+    "pdfkit": "^0.16.0",
+    "playwright": "^1.50.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.26.4",
+    "@babel/core": "^7.26.7",
+    "@babel/node": "^7.26.0",
+    "@babel/preset-env": "^7.26.7"
+  }
+}
