@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { chromium } = require('playwright'); 
 const { calcularTempoExecucao } = require('../pageBase');
 const { salvarCapturaDeTela } = require('../pageBase');
@@ -8,6 +9,9 @@ const { verifica_Conteudo } = require('../pageBase');
 const { embaralha_Ordem } = require('../pageBase');  
 const { salvarStorageEmHistorico } = require('../pageBase');  
 const { verifica_Conteudo_historico } = require('../pageBase');
+const { reading_Env } = require('../pageBase');
+
+
 
 
 
@@ -21,6 +25,8 @@ var N_Processo;
 
 // Fluxo do Site ESAJ | inicio -> 0
 var footer_inicial = "//*[contains(@class, 'titulo_footer text-right')]";
+
+var processo_Nao_Encontrado = '#procNaoEncontrado';
 var local_Documento_Page = '(//*[contains(@class, "ui-icon ui-icon-minusthick")])[3]';
 var ultima_data = '(//*[contains(@id, "groupMovimentacoes")]//*[contains(@class, "row-fluid")])[1]//*[contains(@class, "textoTipoParte")]';
 var ultima_titulo = '((//*[contains(@id, "groupMovimentacoes")]//*[contains(@class, "row-fluid")])[1])//div[2]//span';
@@ -45,11 +51,14 @@ var primeira_data = "(//*[contains(@class, 'clsFaseDataHora')])[1]"
 var primeira_conteudo = "(//*[contains(@class, 'classSpanFaseTexto')])[1]"
 
 
-module.exports = async (lista_, historico_) => {
+module.exports = async (lista_, historico_, headless_) => {
 
     const tempoExecucao = calcularTempoExecucao();
     var historico = historico_;
+   const  HEADLESS_ = reading_Env(process.env.HEADLESS);
 
+
+    
     var lista =  embaralha_Ordem(lista_);
    // var lista = lista_
    
@@ -60,7 +69,7 @@ module.exports = async (lista_, historico_) => {
 
         try {
 
-            const browser = await chromium.launch({ headless: false });
+            const browser = await chromium.launch({ headless:  HEADLESS_ }); // visualização
             const context = await browser.newContext({
                 ignoreHTTPSErrors: true,
                 bypassCSP: true,
@@ -93,7 +102,18 @@ module.exports = async (lista_, historico_) => {
                 tentativas++;
             }
     
-            await page.waitForSelector(footer_inicial, { timeout: 60000 });
+            await page.waitForSelector(footer_inicial, { timeout: 15000 });
+
+            // Verifica se o elemento existe
+            const processoExiste = await page.locator(processo_Nao_Encontrado).count() > 0;
+
+            if (processoExiste) {
+                throw new Error(`❌ Processo não encontrado: ${N_Processo}`);
+            } else {
+                console.log(`Processo encontrado`);
+            }
+
+
             await page.locator(footer_inicial).scrollIntoViewIfNeeded();
 
             // Verifica a existência dos elementos na página
@@ -190,7 +210,7 @@ module.exports = async (lista_, historico_) => {
                     document_Processo = document_Processo_1;
                 }
 
-                await page.waitForSelector(document_Processo, { timeout: 60000 });               
+                await page.waitForSelector(document_Processo, { timeout: 30000 });               
                 page.locator(document_Processo).click();
 
             
@@ -267,6 +287,7 @@ module.exports = async (lista_, historico_) => {
             
         } catch (error) {
             console.error("Erro ao processar o número do processo:", N_Processo, error);    
+            throw error;
         }
         
         tempoExecucao.fim();

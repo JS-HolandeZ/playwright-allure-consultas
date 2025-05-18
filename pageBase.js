@@ -222,6 +222,10 @@ const PDFDocument = require('pdfkit'); // Biblioteca para criar PDFs
         }
     }
     
+    // converte o tipo de .env
+    function reading_Env(value) {
+      return value === 'true';
+    }  
 
 
     
@@ -235,5 +239,5 @@ const PDFDocument = require('pdfkit'); // Biblioteca para criar PDFs
 
     module.exports = { 
         calcularTempoExecucao, salvarCapturaDeTela, aplicarMascara_ESAJ,  removeEspacos, salvarStorageEmJson, 
-        verifica_Conteudo, embaralha_Ordem, salvarStorageEmHistorico, verifica_Conteudo_historico
+        verifica_Conteudo, embaralha_Ordem, salvarStorageEmHistorico, verifica_Conteudo_historico, reading_Env
     };

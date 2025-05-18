@@ -1,0 +1,10 @@
+
+Número do Processo: 30005904820238060010 
+
+❌ 1º Tentativa: O texto NÃO foi encontrado!
+✅ O texto foi encontrado na página!
+Processo encontrado
+> Processo não remetido!
+> Processo de 1º instância
+>> Não houve movimentação <<
+A automação levou 13.412 segundos para ser executada.

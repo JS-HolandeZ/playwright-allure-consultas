@@ -1,16 +1,38 @@
-const autoCeara = require('./Automations/Auto_Ceara');
-var Estado_do_Pais = 'CE';
-//var lista  = ['02012637720228060064', '30005904820238060010', '02406182120248060001', '02089319420228060001'];
-var lista = ['30005904820238060010'];
-var historico = true;
+require('dotenv').config();
+const { execSync } = require('child_process');
+const { reading_Env } = require('./pageBase');
 
-(async () => {
-    console.log("Iniciando o script principal...");
+const view_Allure = reading_Env(process.env.VIEW_ALLURE);
 
-    if(Estado_do_Pais == 'CE'){
-        await autoCeara(lista, historico); // Chama o script Auto_Ceara.js
-    }
-})();
+let testesFalharam = false;
 
+try {
+  // Limpa resultados anteriores
+  execSync('powershell -Command "if (Test-Path allure-results) { Remove-Item -Recurse -Force allure-results }"', {
+    stdio: 'inherit'
+  });
 
+  // Executa os testes | npm run test
+  execSync('npx playwright test', { stdio: 'inherit' });
 
+} catch (error) {
+  console.error('\n❌ Erro durante os testes:', error.message);
+  testesFalharam = true;
+}
+
+// Abre o Allure Report mesmo que os testes falhem
+if (view_Allure) {
+  try {
+    console.log('\n🧪 Abrindo Allure Report...');
+    execSync('npx allure serve allure-results', { stdio: 'inherit' });
+  } catch (error) {
+    console.error('\n❌ Erro ao abrir o Allure Report:', error.message);
+  }
+} else {
+  console.log('\nℹ️ Visualização do Allure Report Desabilitada! ');
+}
+
+// Finaliza com erro se os testes falharam (importante para CI)
+if (testesFalharam) {
+  process.exit(1);
+}

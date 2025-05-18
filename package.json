@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "node play_Runner.js"
+    "test": "node play_Runner.js",
+    "allure:report": "npx allure serve allure-results"
   },
   "keywords": [],
   "author": "J. Samuel Holanda",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "lodash": "^4.17.21",
     "my_auto": "file:",
@@ -20,6 +22,9 @@
     "@babel/cli": "^7.26.4",
     "@babel/core": "^7.26.7",
     "@babel/node": "^7.26.0",
-    "@babel/preset-env": "^7.26.7"
+    "@babel/preset-env": "^7.26.7",
+    "@playwright/test": "^1.52.0",
+    "allure-commandline": "^2.34.0",
+    "allure-playwright": "^3.2.2"
   }
 }
