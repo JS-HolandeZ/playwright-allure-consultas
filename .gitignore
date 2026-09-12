@@ -15,3 +15,9 @@ Thumbs.db
 # Ignore build outputs
 dist/
 build/
+
+
+# Resultados gerados pela automação
+Evidencias/
+allure-results/
+test-results/
