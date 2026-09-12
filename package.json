@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "start": "node server.js",
+    "test:api": "node --test tests/api/*.test.js",
     "test": "node play_Runner.js",
     "allure:report": "npx allure serve allure-results"
   },

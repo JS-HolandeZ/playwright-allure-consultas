@@ -1,5 +1,9 @@
 # 📄 Buscador de Processos Jurídicos com Playwright
 
+Serviço HTTP central: execute `npm start`. Para validar a fila sem acessar TJCE/STJ,
+execute `npm run test:api`. Consulte a [documentação da API](docs/api.md) para arquitetura,
+exemplos de curl, configuração e limitações da fila em memória.
+
 Este projeto tem como objetivo **automatizar a busca de processos jurídicos públicos em andamento**. Utilizamos a ferramenta [Playwright](https://playwright.dev/) 
 para realizar a automação dos acessos, e o [Allure Report](https://docs.qameta.io/allure/) para geração de relatórios detalhados de execução dos testes.
 
