@@ -17,7 +17,11 @@ test.describe('Processos Ceará com histórico', () => {
       try {
         await autoCeara([numeroProcesso], historico);
       } catch (error) {
-        allure.attachment('Erro na execução', error.stack || error.message, 'text/plain');
+        try {
+          await allure.attachment('Erro na execução', error.stack || error.message, 'text/plain');
+        } catch (attachmentError) {
+          console.error('Allure attachment não pôde ser registrado porque o teste já não está ativo:', attachmentError.message);
+        }
         throw error;
       }
     });

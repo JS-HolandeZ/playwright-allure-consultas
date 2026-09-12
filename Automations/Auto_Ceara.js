@@ -67,41 +67,63 @@ module.exports = async (lista_, historico_, headless_) => {
         const N_Processo = lista[i];
         console.log("\nNúmero do Processo:", N_Processo, "\n");
 
+        let browser;
+        let context;
+        let page;
+
         try {
 
-            const browser = await chromium.launch({ headless:  HEADLESS_ }); // visualização
-            const context = await browser.newContext({
+            browser = await chromium.launch({ headless:  HEADLESS_ }); // visualização
+            context = await browser.newContext({
                 ignoreHTTPSErrors: true,
                 bypassCSP: true,
             });
 
-            let page = await context.newPage();
+            page = await context.newPage();
             let texto_Do_PDF = "";
 
 
 
             await page.goto(URL_ESAJ);
+
             await page.fill("#numeroProcesso", "");
             await page.type("#numeroProcesso", N_Processo, { delay: 150 });
-            await page.click(".ui-button-text.ui-c");
 
+            const botaoConsulta = page.getByRole('button', { name: 'Pesquisar Processos' });
+            const resultadoConsulta = page.getByText('As informações abaixo são');
 
-            var tentativas = 0;
-            
-            while (tentativas < 3) { 
-                const infoVisivel = await page.getByText('As informações abaixo são').isVisible(); // Atualiza a verificação
+            await botaoConsulta.waitFor({ state: 'visible', timeout: 15000 });
+            await botaoConsulta.click();
 
-                if (infoVisivel) {
-                    console.log("✅ O texto foi encontrado na página!");
-                    break; // Sai do loop se o texto for encontrado
+            try {
+                await resultadoConsulta.waitFor({
+                    state: 'visible',
+                    timeout: 15000
+                });
+                console.log("✅ O texto foi encontrado na página!");
+            } catch (error) {
+                if (page.isClosed()) {
+                    throw new Error(`Página fechada antes da confirmação da consulta do processo ${N_Processo}.`);
                 }
-                console.log(`❌ ${tentativas + 1}º Tentativa: O texto NÃO foi encontrado!`);
-                await page.waitForTimeout(5000); // Espera 5 segundos
-                await page.click(".ui-button-text.ui-c");
 
-                tentativas++;
+                console.warn("⚠️ Resultado não apareceu após o primeiro clique. Realizando 2ª tentativa...");
+                await botaoConsulta.waitFor({ state: 'visible', timeout: 15000 });
+                await botaoConsulta.click();
+
+                try {
+                    await resultadoConsulta.waitFor({
+                        state: 'visible',
+                        timeout: 15000
+                    });
+                    console.log("✅ O texto foi encontrado na página!");
+                } catch (retryError) {
+                    if (page.isClosed()) {
+                        throw new Error(`Página fechada antes da confirmação da consulta do processo ${N_Processo}.`);
+                    }
+                    throw new Error(`Não foi possível confirmar a consulta do processo ${N_Processo} após 2 tentativas de clique.`);
+                }
             }
-    
+
             await page.waitForSelector(footer_inicial, { timeout: 15000 });
 
             // Verifica se o elemento existe
@@ -135,14 +157,16 @@ module.exports = async (lista_, historico_, headless_) => {
                 await page.locator(btn_Busca_STJ).click()  
                
                 const [novaAba_STJ] = await Promise.all([
-                                      
-                    await page.waitForEvent('popup', { timeout: 60000 }),  // Aguarda no máximo 5 segundos                                                
+                    page.waitForEvent('popup', { timeout: 60000 }),
                 ]);
-                
-               
-                await novaAba_STJ.waitForLoadState(); // Espera a página carregar               
-                await novaAba_STJ.locator(btn_aba_fases).click() 
 
+                if (!novaAba_STJ || novaAba_STJ.isClosed()) {
+                    throw new Error(`Popup da STJ para o processo ${N_Processo} foi fechada antes da leitura.`);
+                }
+
+                await novaAba_STJ.waitForLoadState('domcontentloaded', { timeout: 15000 });
+                await novaAba_STJ.locator(btn_aba_fases).waitFor({ state: 'visible', timeout: 15000 });
+                await novaAba_STJ.locator(btn_aba_fases).click();
              
 
                 let valor_Historico_Storage = [];  // Inicializa como array
@@ -177,22 +201,15 @@ module.exports = async (lista_, historico_, headless_) => {
                 const conteudo_Historico = verifica_Conteudo_historico(`./Evidencias/${Estado_CE}/${N_Processo}/Historico.json`);
               
 
-                if(my_storage != conteudo_Atual){
-
+                if (my_storage !== conteudo_Atual) {
                     salvarStorageEmJson(`./Evidencias/${Estado_CE}/${N_Processo}` , my_storage);
                     salvarStorageEmHistorico(`./Evidencias/${Estado_CE}/${N_Processo}` , valor_Historico_Storage);
-                    console.log(">> Nova movimentação: "+JSON.stringify(my_storage, null, 2)+" <<")
-                    //await salvarCapturaDeTela(novaAba, N_Processo, texto_Do_PDF, Estado_CE);
-                }
-                if(my_storage == conteudo_Atual && conteudo_Historico == undefined){
-
-                    
+                    console.log(">> Nova movimentação: "+JSON.stringify(my_storage, null, 2)+" <<");
+                } else if (my_storage === conteudo_Atual && conteudo_Historico === undefined) {
                     salvarStorageEmHistorico(`./Evidencias/${Estado_CE}/${N_Processo}` , valor_Historico_Storage);
-                    console.log(">> Criado um historico: "+JSON.stringify(my_storage, null, 2)+" <<")
-                    //await salvarCapturaDeTela(novaAba, N_Processo, texto_Do_PDF, Estado_CE);
-                }else{
-
-                    console.log(">> Não houve movimentação <<")
+                    console.log(">> Criado um historico: "+JSON.stringify(my_storage, null, 2)+" <<");
+                } else {
+                    console.log(">> Não houve movimentação <<");
                 }
             
                
@@ -215,14 +232,25 @@ module.exports = async (lista_, historico_, headless_) => {
 
             
                 const [novaAba] = await Promise.all([
-                    
-                    await page.waitForEvent('popup', { timeout: 60000 }),
+                    page.waitForEvent('popup', { timeout: 60000 }),
                 ]);
 
-               
+                if (!novaAba || novaAba.isClosed()) {
+                    throw new Error(`Popup do processo ${N_Processo} foi fechada antes da leitura da movimentação.`);
+                }
 
-                await novaAba.waitForLoadState();
-                await novaAba.locator(local_Documento_Page).scrollIntoViewIfNeeded();
+                await novaAba.waitForLoadState('domcontentloaded', { timeout: 15000 });
+
+                const elementoDocumento = novaAba.locator(local_Documento_Page);
+                if (novaAba.isClosed()) {
+                    throw new Error(`A página do processo ${N_Processo} foi fechada antes do scroll do documento.`);
+                }
+
+                await elementoDocumento.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {
+                    throw new Error(`Elemento obrigatório não encontrado: ${local_Documento_Page}`);
+                });
+
+                await elementoDocumento.scrollIntoViewIfNeeded({ timeout: 10000 });
 
                 const textoCapturado = await novaAba.locator(ultima_data).textContent();
                 const textoTitulo = await novaAba.locator(ultima_titulo).textContent();
@@ -264,30 +292,36 @@ module.exports = async (lista_, historico_, headless_) => {
                 }
                 
        
-                if(my_storage != conteudo_Atual){
-
-                 salvarStorageEmJson(`./Evidencias/${Estado_CE}/${N_Processo}` , my_storage);
-                 salvarStorageEmHistorico(`./Evidencias/${Estado_CE}/${N_Processo}` , valor_Historico_Storage);
-                 console.log(">> Nova movimentação: "+JSON.stringify(my_storage, null, 2)+" <<")
-                 //await salvarCapturaDeTela(novaAba, N_Processo, texto_Do_PDF, Estado_CE);
-                }
-                if(my_storage == conteudo_Atual && conteudo_Historico == undefined){
-
-                   
+                if (my_storage !== conteudo_Atual) {
+                    salvarStorageEmJson(`./Evidencias/${Estado_CE}/${N_Processo}` , my_storage);
                     salvarStorageEmHistorico(`./Evidencias/${Estado_CE}/${N_Processo}` , valor_Historico_Storage);
-                    console.log(">> Criado um historico: "+JSON.stringify(my_storage, null, 2)+" <<")
-                    //await salvarCapturaDeTela(novaAba, N_Processo, texto_Do_PDF, Estado_CE);
-                }else{
-
-                 console.log(">> Não houve movimentação <<")
-                }                 
+                    console.log(">> Nova movimentação: "+JSON.stringify(my_storage, null, 2)+" <<");
+                } else if (my_storage === conteudo_Atual && conteudo_Historico === undefined) {
+                    salvarStorageEmHistorico(`./Evidencias/${Estado_CE}/${N_Processo}` , valor_Historico_Storage);
+                    console.log(">> Criado um historico: "+JSON.stringify(my_storage, null, 2)+" <<");
+                } else {
+                    console.log(">> Não houve movimentação <<");
+                }
+            }
+        } catch (error) {
+            console.error("Erro ao processar o número do processo:", N_Processo, error);
+            throw error;
+        } finally {
+            try {
+                if (context && typeof context.close === 'function') {
+                    await context.close();
+                }
+            } catch (contextError) {
+                console.error(`Erro ao fechar context do processo ${N_Processo}:`, contextError);
             }
 
-            await browser.close();
-            
-        } catch (error) {
-            console.error("Erro ao processar o número do processo:", N_Processo, error);    
-            throw error;
+            try {
+                if (browser && typeof browser.close === 'function') {
+                    await browser.close();
+                }
+            } catch (browserError) {
+                console.error(`Erro ao fechar browser do processo ${N_Processo}:`, browserError);
+            }
         }
         
         tempoExecucao.fim();

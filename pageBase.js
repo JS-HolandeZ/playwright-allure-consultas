@@ -176,16 +176,22 @@ const PDFDocument = require('pdfkit'); // Biblioteca para criar PDFs
 
     
 
+    const primeiraConsultaGeradaLogada = new Set();
+
     function verifica_Conteudo(local) {
 
         var caminho = local.replace(/\/Andamento\.json$/, '');
         const caminhoJson = path.join(caminho, 'Andamento.json');
+        const chaveLog = path.resolve(caminho);
 
         if (!fs.existsSync(caminhoJson)) {
         
             fs.mkdirSync(caminho, { recursive: true });
             fs.writeFileSync(caminhoJson, JSON.stringify([], null, 2), 'utf-8');
-            console.log(`1º Consulta Gerada:`);
+            if (!primeiraConsultaGeradaLogada.has(chaveLog)) {
+                console.log(`1º Consulta Gerada:`);
+                primeiraConsultaGeradaLogada.add(chaveLog);
+            }
         } 
         
         try {
@@ -203,12 +209,16 @@ const PDFDocument = require('pdfkit'); // Biblioteca para criar PDFs
 
         var caminho = local.replace(/\/Historico\.json$/, '');
         const caminhoJson = path.join(caminho, 'Historico.json');
+        const chaveLog = path.resolve(caminho);
 
         if (!fs.existsSync(caminhoJson)) {
         
             fs.mkdirSync(caminho, { recursive: true });
             fs.writeFileSync(caminhoJson, JSON.stringify([], null, 2), 'utf-8');
-            console.log(`1º Consulta Gerada:`);
+            if (!primeiraConsultaGeradaLogada.has(chaveLog)) {
+                console.log(`1º Consulta Gerada:`);
+                primeiraConsultaGeradaLogada.add(chaveLog);
+            }
         } 
         
         try {
