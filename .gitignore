@@ -5,8 +5,7 @@ node_modules/
 logs
 *.log
 
-# Ignore environment variables | Não existe dados sensiveis, então o mesmo foi permitido como arquivo de configuração.
-#.env
+.env
 
 # Ignore system files
 .DS_Store
