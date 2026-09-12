@@ -1,16 +1,36 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const { execSync } = require('child_process');
 const { reading_Env } = require('./pageBase');
 
 const view_Allure = reading_Env(process.env.VIEW_ALLURE);
 
+function limparAllureResults() {
+  const caminho = path.resolve(__dirname, 'allure-results');
+
+  try {
+    fs.rmSync(caminho, {
+      recursive: true,
+      force: true
+    });
+
+    fs.mkdirSync(caminho, {
+      recursive: true
+    });
+
+    console.log('📁 Diretório allure-results limpo.');
+  } catch (error) {
+    console.error('❌ Erro ao limpar o diretório allure-results:', error);
+    throw error;
+  }
+}
+
 let testesFalharam = false;
 
 try {
   // Limpa resultados anteriores
-  execSync('powershell -Command "if (Test-Path allure-results) { Remove-Item -Recurse -Force allure-results }"', {
-    stdio: 'inherit'
-  });
+  limparAllureResults();
 
   // Executa os testes | npm run test
   execSync('npx playwright test', { stdio: 'inherit' });

@@ -1,0 +1,11 @@
+Error: ❌ Processo não encontrado: 02406182120248060001
+    at module.exports (C:\xampp\htdocs\projetos\playwright-allure-consultas\Automations\Auto_Ceara.js:111:23)
+    at C:\xampp\htdocs\projetos\playwright-allure-consultas\Automations\tests\ceara.spec.js:18:9
+    at C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\worker\workerMain.js:304:9
+    at C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\worker\testInfo.js:277:11
+    at TimeoutManager.withRunnable (C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\worker\timeoutManager.js:67:14)
+    at TestInfoImpl._runWithTimeout (C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\worker\testInfo.js:275:7)
+    at C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\worker\workerMain.js:302:7
+    at WorkerMain._runTest (C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\worker\workerMain.js:277:5)
+    at WorkerMain.runTestGroup (C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\worker\workerMain.js:193:11)
+    at process.<anonymous> (C:\xampp\htdocs\projetos\playwright-allure-consultas\node_modules\playwright\lib\common\process.js:70:22)
